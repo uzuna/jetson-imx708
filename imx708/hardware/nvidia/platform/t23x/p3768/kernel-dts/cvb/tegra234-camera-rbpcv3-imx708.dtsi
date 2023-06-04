@@ -277,8 +277,8 @@
 					step_framerate = "1";
 					default_framerate = "30010000";
 					min_exp_time = "52";
-					max_exp_time = "50636";
-					step_exp_time = "26";
+					max_exp_time = "32680";
+					step_exp_time = "13";
 					default_exp_time = "5000";
 
 					embedded_metadata_height = "4";
@@ -391,8 +391,8 @@
 					step_framerate = "1";
 					default_framerate = "30010000";
 					min_exp_time = "52";
-					max_exp_time = "50636";
-					step_exp_time = "26";
+					max_exp_time = "32680";
+					step_exp_time = "13";
 					default_exp_time = "5000";
 
 					embedded_metadata_height = "4";

@@ -143,8 +143,7 @@ static int imx708_set_gain(struct tegracam_device *tc_dev, s64 val)
 		val = mode->control_properties.min_gain_val;
 	else if (val > mode->control_properties.max_gain_val)
 		val = mode->control_properties.max_gain_val;
-
-	dev_dbg(dev, "%s: val: %lld\n", __func__, val);
+	
 	// アナログゲインは2レジスタに分かれている
 	// 単位が不明なので、値の変換をせずそのまま書き込む
 	imx708_regtable(regs, IMX708_REG_ANALOG_GAIN, 2, val);
