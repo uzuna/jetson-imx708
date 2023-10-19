@@ -44,6 +44,10 @@ ${TOOLCHAIN_DIR}/${TOOLCHAIN_TAR}:
 	mkdir -p ${TOOLCHAIN_DIR}
 	cd ${TOOLCHAIN_DIR} && wget https://developer.download.nvidia.com/embedded/L4T/bootlin/${TOOLCHAIN_TAR}
 
+.PHONY: setup
+setup:
+	sudo apt install -y wget bzip2 build-essential flex bison bc libssl-dev
+
 #
 # for Debug and Development
 #
