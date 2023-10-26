@@ -58,7 +58,6 @@ trace.enable:
 # need sudo
 .PHONY: trace.disable
 trace.disable:
-	echo 0 > /sys/kernel/debug/tracing/tracing_on
 	echo 0 > /sys/kernel/debug/tracing/events/tegra_rtcpu/enable	
 	echo 0 > /sys/kernel/debug/tracing/events/freertos/enable
 	echo 0 > /sys/kernel/debug/camrtc/log-level
