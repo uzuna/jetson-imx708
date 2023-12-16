@@ -48,6 +48,13 @@ ${TOOLCHAIN_DIR}/${TOOLCHAIN_TAR}:
 setup:
 	sudo apt install -y wget bzip2 build-essential flex bison bc libssl-dev
 
+.PHONY: clean
+clean:
+	rm -rf ${KERNEL_OUT}
+	rm -rf ${TOOLCHAIN_DIR}
+	rm -rf ${L4T_SOURCE_DIR}
+	rm -rf ${L4T_SOURCE_TBZ}
+
 #
 # for Debug and Development
 #
