@@ -1,0 +1,1708 @@
+diff --git a/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/Makefile b/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/Makefile
+index b3b0638f5..9e05568ca 100644
+--- a/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/Makefile
++++ b/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/Makefile
+@@ -49,6 +49,7 @@ dtbo-y += tegra234-p3767-camera-p3768-imx219-dual.dtbo
+ dtbo-y += tegra234-p3767-camera-p3768-imx477-dual.dtbo
+ dtbo-y += tegra234-p3767-camera-p3768-imx477-dual-4lane.dtbo
+ dtbo-y += tegra234-p3767-camera-p3768-imx477-imx219.dtbo
++dtbo-y += tegra234-p3767-camera-p3768-imx708-dual.dtbo
+ dtbo-y += tegra234-p3737-camera-eCAM130A-overlay.dtbo
+ dtbo-y += tegra234-p3737-camera-dual-hawk-ar0234-e3653-overlay.dtbo
+ dtbo-y += tegra234-p3737-camera-imx390-overlay.dtbo
+diff --git a/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/tegra234-p3767-camera-p3768-imx708-dual.dts b/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/tegra234-p3767-camera-p3768-imx708-dual.dts
+new file mode 100644
+index 000000000..ad4bb11f7
+--- /dev/null
++++ b/Linux_for_Tegra/source/hardware/nvidia/t23x/nv-public/overlay/tegra234-p3767-camera-p3768-imx708-dual.dts
+@@ -0,0 +1,546 @@
++// SPDX-License-Identifier: GPL-2.0-only
++// SPDX-FileCopyrightText: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++
++/dts-v1/;
++/plugin/;
++
++#define CAM0_PWDN	TEGRA234_MAIN_GPIO(H, 6)
++#define CAM1_PWDN	TEGRA234_MAIN_GPIO(AC, 0)
++#define CAM_I2C_MUX 	TEGRA234_AON_GPIO(CC, 3)
++
++#include <dt-bindings/tegra234-p3767-0000-common.h>
++
++/ {
++	overlay-name = "Camera IMX708 Dual";
++	jetson-header-name = "Jetson 24pin CSI Connector";
++	compatible = JETSON_COMPATIBLE_P3768;
++
++	fragment@0 {
++		target-path = "/";
++		__overlay__ {
++			tegra-capture-vi  {
++				num-channels = <2>;
++				ports {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					port@0 {
++						reg = <0>;
++						rbpcv3_imx708_vi_in0: endpoint {
++							port-index = <1>;
++							bus-width = <2>;
++							remote-endpoint = <&rbpcv3_imx708_csi_out0>;
++						};
++					};
++					port@1 {
++						reg = <1>;
++						rbpcv3_imx708_vi_in1: endpoint {
++							port-index = <2>;
++							bus-width = <2>;
++							remote-endpoint = <&rbpcv3_imx708_csi_out1>;
++						};
++					};
++				};
++			};
++			tegra-camera-platform {
++				compatible = "nvidia, tegra-camera-platform";
++
++				num_csi_lanes = <4>;
++				max_lane_speed = <1500000>;
++				min_bits_per_pixel = <10>;
++				vi_peak_byte_per_pixel = <2>;
++				vi_bw_margin_pct = <25>;
++				max_pixel_rate = <7500000>;
++				isp_peak_byte_per_pixel = <5>;
++				isp_bw_margin_pct = <25>;
++
++				modules {
++					module0 {
++						badge = "jakku_front_RBPCV3";
++						position = "front";
++						orientation = "1";
++						drivernode0 {
++							pcl_id = "v4l2_sensor";
++							sysfs-device-tree = "/proc/device-tree/cam_i2cmux/i2c@0/rbpcv3_imx708_a@1a";
++						};
++					};
++					module1 {
++						badge = "jakku_rear_RBPCV3";
++						position = "rear";
++						orientation = "1";
++						drivernode0 {
++							pcl_id = "v4l2_sensor";
++							sysfs-device-tree = "/proc/device-tree/cam_i2cmux/i2c@1/rbpcv3_imx708_c@1a";
++						};
++					};
++				};
++			};
++			bus@0 {
++				host1x@13e00000 {
++					nvcsi@15a00000 {
++						num-channels = <2>;
++						#address-cells = <1>;
++						#size-cells = <0>;
++						channel@0 {
++							reg = <0>;
++							ports {
++								#address-cells = <1>;
++								#size-cells = <0>;
++								port@0 {
++									reg = <0>;
++									rbpcv3_imx708_csi_in0: endpoint@0 {
++										port-index = <1>;
++										bus-width = <2>;
++										remote-endpoint = <&rbpcv3_imx708_out0>;
++									};
++								};
++								port@1 {
++									reg = <1>;
++									rbpcv3_imx708_csi_out0: endpoint@1 {
++										remote-endpoint = <&rbpcv3_imx708_vi_in0>;
++									};
++								};
++							};
++						};
++						channel@1 {
++							reg = <1>;
++							ports {
++								#address-cells = <1>;
++								#size-cells = <0>;
++								port@2 {
++									reg = <0>;
++									rbpcv3_imx708_csi_in1: endpoint@2 {
++										port-index = <2>;
++										bus-width = <2>;
++										remote-endpoint = <&rbpcv3_imx708_out1>;
++									};
++								};
++								port@3 {
++									reg = <1>;
++									rbpcv3_imx708_csi_out1: endpoint@3 {
++										remote-endpoint = <&rbpcv3_imx708_vi_in1>;
++									};
++								};
++							};
++						};
++					};
++				};
++				cam_i2cmux {
++					status = "okay";
++					compatible = "i2c-mux-gpio";
++					#address-cells = <1>;
++					#size-cells = <0>;
++					mux-gpios = <&gpio_aon CAM_I2C_MUX GPIO_ACTIVE_HIGH>;
++					i2c-parent = <&cam_i2c>;
++					i2c@0 {
++						status = "okay";
++						reg = <0>;
++						#address-cells = <1>;
++						#size-cells = <0>;
++						rbpcv3_imx708_a@1a {
++							reset-gpios = <&gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
++							compatible = "sony,imx708";
++							/* I2C device address */
++							reg = <0x1a>;
++							/* V4L2 device node location */
++							devnode = "video0";
++							/* Physical dimensions of sensor */
++							physical_w = "3.680";
++							physical_h = "2.760";
++							sensor_model = "imx708";
++							use_sensor_mode_id = "true";
++							/**
++							* ==== Modes ====
++							* A modeX node is required to support v4l2 driver
++							* implementation with NVIDIA camera software stack
++							*
++							* == Signal properties ==
++							*
++							* phy_mode = "";
++							* PHY mode used by the MIPI lanes for this device
++							*
++							* tegra_sinterface = "";
++							* CSI Serial interface connected to tegra
++							* Incase of virtual HW devices, use virtual
++							* For SW emulated devices, use host
++							*
++							* pix_clk_hz = "";
++							* Sensor pixel clock used for calculations like exposure and framerate
++							*
++							* readout_orientation = "0";
++							* Based on camera module orientation.
++							* Only change readout_orientation if you specifically
++							* Program a different readout order for this mode
++							*
++							* lane_polarity
++							* Based on the camera connector pin.
++							* CSIx_D0 | CSIx_D1 | CSI(X+1)_D0 | CSI(X+1)CSIx_D1
++							*    LSB  |   BIT1  |     BIT2    |      MSB
++							* if there is a polarity swap on any lane, the bit corrsponding
++							* to the lane should be set
++							* e.g. polarity swap on CSIx_D0 only -> lane_polarity = "1"; 0001
++							* e.g. polarity swap on CSIx_D1 and CSI(X+1)_D0 -> lane_polarity = "6"; 0110
++							*
++							* == Image format Properties ==
++							*
++							* active_w = "";
++							* Pixel active region width
++							*
++							* active_h = "";
++							* Pixel active region height
++							*
++							* pixel_t = "";
++							* The sensor readout pixel pattern
++							*
++							* line_length = "";
++							* Pixel line length (width) for sensor mode.
++							*
++							* == Source Control Settings ==
++							*
++							* Gain factor used to convert fixed point integer to float
++							* Gain range [min_gain/gain_factor, max_gain/gain_factor]
++							* Gain step [step_gain/gain_factor is the smallest step that can be configured]
++							* Default gain [Default gain to be initialized for the control.
++							*     use min_gain_val as default for optimal results]
++							* Framerate factor used to convert fixed point integer to float
++							* Framerate range [min_framerate/framerate_factor, max_framerate/framerate_factor]
++							* Framerate step [step_framerate/framerate_factor is the smallest step that can be configured]
++							* Default Framerate [Default framerate to be initialized for the control.
++							*     use max_framerate to get required performance]
++							* Exposure factor used to convert fixed point integer to float
++							* For convenience use 1 sec = 1000000us as conversion factor
++							* Exposure range [min_exp_time/exposure_factor, max_exp_time/exposure_factor]
++							* Exposure step [step_exp_time/exposure_factor is the smallest step that can be configured]
++							* Default Exposure Time [Default exposure to be initialized for the control.
++							*     Set default exposure based on the default_framerate for optimal exposure settings]
++							*
++							* gain_factor = ""; (integer factor used for floating to fixed point conversion)
++							* min_gain_val = ""; (ceil to integer)
++							* max_gain_val = ""; (ceil to integer)
++							* step_gain_val = ""; (ceil to integer)
++							* default_gain = ""; (ceil to integer)
++							* Gain limits for mode
++							*
++							* exposure_factor = ""; (integer factor used for floating to fixed point conversion)
++							* min_exp_time = ""; (ceil to integer)
++							* max_exp_time = ""; (ceil to integer)
++							* step_exp_time = ""; (ceil to integer)
++							* default_exp_time = ""; (ceil to integer)
++							* Exposure Time limits for mode (sec)
++							*
++							* framerate_factor = ""; (integer factor used for floating to fixed point conversion)
++							* min_framerate = ""; (ceil to integer)
++							* max_framerate = ""; (ceil to integer)
++							* step_framerate = ""; (ceil to integer)
++							* default_framerate = ""; (ceil to integer)
++							* Framerate limits for mode (fps)
++							*
++							* embedded_metadata_height = "";
++							* Sensor embedded metadata height in units of rows.
++							* If sensor does not support embedded metadata value should be 0.
++							*/
++							mode0 { /* imx708_MODE_4608x2592 */
++								mclk_khz = "24000";
++								num_lanes = "2";
++								tegra_sinterface = "serial_a";
++								phy_mode = "DPHY";
++								discontinuous_clk = "no";
++								dpcm_enable = "false";
++								cil_settletime = "0";
++								lane_polarity = "6";
++
++								active_w = "4608";
++								active_h = "2592";
++								mode_type = "bayer";
++								pixel_phase = "rggb";
++								csi_pixel_bit_depth = "10";
++								readout_orientation = "0";
++								line_length = "15648";
++								inherent_gain = "1";
++								pix_clk_hz = "300000000";
++
++								gain_factor = "1";
++								framerate_factor = "1000000";
++								exposure_factor = "1000000"; /* ns */
++								min_gain_val = "112";
++								max_gain_val = "960";
++								step_gain_val = "1";
++								default_gain = "112";
++								min_hdr_ratio = "1";
++								max_hdr_ratio = "1";
++								min_framerate = "14350000";
++								max_framerate = "14350000";
++								step_framerate = "1";
++								default_framerate = "14350000";
++								min_exp_time = "210";
++								max_exp_time = "68406";
++								step_exp_time = "26";
++								default_exp_time = "5000";
++
++								embedded_metadata_height = "4";
++							};
++
++							mode1 {
++								mclk_khz = "24000";
++								num_lanes = "2";
++								tegra_sinterface = "serial_a";
++								phy_mode = "DPHY";
++								discontinuous_clk = "no";
++								dpcm_enable = "false";
++								cil_settletime = "0";
++								lane_polarity = "6";
++
++								active_w = "2304";
++								active_h = "1296";
++								mode_type = "bayer";
++								pixel_phase = "rggb";
++								csi_pixel_bit_depth = "10";
++								readout_orientation = "0";
++								line_length = "7824";
++								inherent_gain = "1";
++								pix_clk_hz = "300000000";
++
++								gain_factor = "1";
++								framerate_factor = "1000000";
++								exposure_factor = "1000000"; /* us */
++								min_gain_val = "112";
++								max_gain_val = "960";
++								step_gain_val = "1";
++								default_gain = "112";
++								min_hdr_ratio = "1";
++								max_hdr_ratio = "1";
++								min_framerate = "30010000";
++								max_framerate = "30010000";
++								step_framerate = "1";
++								default_framerate = "30010000";
++								min_exp_time = "52";
++								max_exp_time = "32680";
++								step_exp_time = "13";
++								default_exp_time = "5000";
++
++								embedded_metadata_height = "4";
++							};
++
++							mode2 {
++								mclk_khz = "24000";
++								num_lanes = "2";
++								tegra_sinterface = "serial_a";
++								phy_mode = "DPHY";
++								discontinuous_clk = "no";
++								dpcm_enable = "false";
++								cil_settletime = "0";
++								lane_polarity = "6";
++
++								active_w = "1536";
++								active_h = "864";
++								mode_type = "bayer";
++								pixel_phase = "rggb";
++								csi_pixel_bit_depth = "10";
++								readout_orientation = "0";
++								line_length = "5216";
++								inherent_gain = "1";
++								pix_clk_hz = "300000000";
++
++								gain_factor = "1";
++								framerate_factor = "1000000";
++								exposure_factor = "1000000"; /* us */
++								min_gain_val = "112";
++								max_gain_val = "960";
++								step_gain_val = "1";
++								default_gain = "112";
++								min_hdr_ratio = "1";
++								max_hdr_ratio = "1";
++								min_framerate = "120120000";
++								max_framerate = "120120000";
++								step_framerate = "1";
++								default_framerate = "120120000";
++								min_exp_time = "36";
++								max_exp_time = "7970";
++								step_exp_time = "18";
++								default_exp_time = "5000";
++
++								embedded_metadata_height = "4";
++							};
++
++							ports {
++								#address-cells = <1>;
++								#size-cells = <0>;
++								port@0 {
++									reg = <0>;
++									rbpcv3_imx708_out0: endpoint {
++										port-index = <1>;
++										bus-width = <2>;
++										remote-endpoint = <&rbpcv3_imx708_csi_in0>;
++									};
++								};
++							};
++						};
++					};
++					i2c@1 {
++						status = "okay";
++						reg = <1>;
++						#address-cells = <1>;
++						#size-cells = <0>;
++						rbpcv3_imx708_c@1a {
++							reset-gpios = <&gpio CAM1_PWDN GPIO_ACTIVE_HIGH>;
++							compatible = "sony,imx708";
++							/* I2C device address */
++							reg = <0x1a>;
++							/* V4L2 device node location */
++							devnode = "video1";
++							/* Physical dimensions of sensor */
++							physical_w = "3.680";
++							physical_h = "2.760";
++							sensor_model = "imx708";
++							use_sensor_mode_id = "true";
++
++							mode0 { /* imx708_MODE_4608x2592 */
++								mclk_khz = "24000";
++								num_lanes = "2";
++								tegra_sinterface = "serial_c";
++								phy_mode = "DPHY";
++								discontinuous_clk = "no";
++								dpcm_enable = "false";
++								cil_settletime = "0";
++								lane_polarity = "0";
++
++								active_w = "4608";
++								active_h = "2592";
++								mode_type = "bayer";
++								pixel_phase = "rggb";
++								csi_pixel_bit_depth = "10";
++								readout_orientation = "0";
++								line_length = "15648";
++								inherent_gain = "1";
++								pix_clk_hz = "300000000";
++
++								gain_factor = "1";
++								framerate_factor = "1000000";
++								exposure_factor = "1000000"; /* us */
++								min_gain_val = "112";
++								max_gain_val = "960";
++								step_gain_val = "1";
++								default_gain = "112";
++								min_hdr_ratio = "1";
++								max_hdr_ratio = "1";
++								min_framerate = "14350000";
++								max_framerate = "14350000";
++								step_framerate = "1";
++								default_framerate = "14350000";
++								min_exp_time = "210";
++								max_exp_time = "68406";
++								step_exp_time = "26";
++								default_exp_time = "5000";
++
++								embedded_metadata_height = "4";
++							};
++
++							mode1 {
++								mclk_khz = "24000";
++								num_lanes = "2";
++								tegra_sinterface = "serial_c";
++								phy_mode = "DPHY";
++								discontinuous_clk = "no";
++								dpcm_enable = "false";
++								cil_settletime = "0";
++								lane_polarity = "0";
++
++								active_w = "2304";
++								active_h = "1296";
++								mode_type = "bayer";
++								pixel_phase = "rggb";
++								csi_pixel_bit_depth = "10";
++								readout_orientation = "0";
++								line_length = "7824";
++								inherent_gain = "1";
++								pix_clk_hz = "300000000";
++
++								gain_factor = "1";
++								framerate_factor = "1000000";
++								exposure_factor = "1000000"; /* us */
++								min_gain_val = "112";
++								max_gain_val = "960";
++								step_gain_val = "1";
++								default_gain = "112";
++								min_hdr_ratio = "1";
++								max_hdr_ratio = "1";
++								min_framerate = "30010000";
++								max_framerate = "30010000";
++								step_framerate = "1";
++								default_framerate = "30010000";
++								min_exp_time = "52";
++								max_exp_time = "32680";
++								step_exp_time = "13";
++								default_exp_time = "5000";
++
++								embedded_metadata_height = "4";
++							};
++
++							mode2 {
++								mclk_khz = "24000";
++								num_lanes = "2";
++								tegra_sinterface = "serial_c";
++								phy_mode = "DPHY";
++								discontinuous_clk = "no";
++								dpcm_enable = "false";
++								cil_settletime = "0";
++								lane_polarity = "0";
++
++								active_w = "1536";
++								active_h = "864";
++								mode_type = "bayer";
++								pixel_phase = "rggb";
++								csi_pixel_bit_depth = "10";
++								readout_orientation = "0";
++								line_length = "5216";
++								inherent_gain = "1";
++								pix_clk_hz = "300000000";
++
++								gain_factor = "1";
++								framerate_factor = "1000000";
++								exposure_factor = "1000000"; /* us */
++								min_gain_val = "112";
++								max_gain_val = "960";
++								step_gain_val = "1";
++								default_gain = "112";
++								min_hdr_ratio = "1";
++								max_hdr_ratio = "1";
++								min_framerate = "120120000";
++								max_framerate = "120120000";
++								step_framerate = "1";
++								default_framerate = "120120000";
++								min_exp_time = "36";
++								max_exp_time = "7970";
++								step_exp_time = "18";
++								default_exp_time = "5000";
++
++								embedded_metadata_height = "4";
++							};
++
++							ports {
++								#address-cells = <1>;
++								#size-cells = <0>;
++								port@0 {
++									reg = <0>;
++									rbpcv3_imx708_out1: endpoint {
++										port-index = <2>;
++										bus-width = <2>;
++										remote-endpoint = <&rbpcv3_imx708_csi_in1>;
++									};
++								};
++							};
++						};
++					};
++				};
++
++				gpio@6000d000 {
++					camera-control-output-low {
++						gpio-hog;
++						output-low;
++						gpios = <CAM1_PWDN 0  CAM0_PWDN 0>;
++						label = "cam1-pwdn", "cam0-pwdn";
++					};
++				};
++			};
++		};
++	};
++};
+diff --git a/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/Makefile b/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/Makefile
+index 866fc75bb..6feb01461 100644
+--- a/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/Makefile
++++ b/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/Makefile
+@@ -15,6 +15,7 @@ obj-m += nv_imx274.o
+ obj-m += nv_imx318.o
+ obj-m += nv_imx390.o
+ obj-m += nv_imx477.o
++obj-m += nv_imx708.o
+ obj-m += nv_ov5693.o
+ obj-m += nv_ar0234.o
+ obj-m += pca9570.o
+diff --git a/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/imx708_mode_tbls.h b/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/imx708_mode_tbls.h
+new file mode 100644
+index 000000000..49dfa2680
+--- /dev/null
++++ b/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/imx708_mode_tbls.h
+@@ -0,0 +1,444 @@
++/*
++ * Copyright (c) 2020-2023, NVIDIA CORPORATION.  All rights reserved.
++ * Copyright (c) 2022, Raspberry Pi Ltd
++ * Copyright (c) 2023, FUJINAKA Fumiya<uzuna.kf@gmail.com>.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __IMX708_I2C_TABLES__
++#define __IMX708_I2C_TABLES__
++
++#include <media/camera_common.h>
++
++#define IMX708_TABLE_WAIT_MS 0
++#define IMX708_TABLE_END 1
++#define IMX708_WAIT_MS 1
++#define IMX708_REG_MODE_SELECT	0x0100
++#define IMX708_MODE_STANDBY		0x00
++#define IMX708_MODE_STREAMING	0x01
++
++#define IMX708_REG_ANALOG_GAIN	0x0204
++#define IMX708_REG_EXPOSURE		0x0202
++
++#define imx708_reg struct reg_8
++
++static const imx708_reg imx708_start[] = {
++	{IMX708_REG_MODE_SELECT, IMX708_MODE_STREAMING},
++	{IMX708_TABLE_WAIT_MS, IMX708_WAIT_MS*3},
++	{IMX708_TABLE_END, 0x00}
++};
++
++static const imx708_reg imx708_stop[] = {
++	{IMX708_REG_MODE_SELECT, IMX708_MODE_STANDBY},
++	{IMX708_TABLE_END, 0x00}
++};
++
++static const imx708_reg imx708_mode_common[] = {
++	{0x0100, 0x00},
++	{0x0136, 0x18},
++	{0x0137, 0x00},
++	{0x33F0, 0x02},
++	{0x33F1, 0x05},
++	{0x3062, 0x00},
++	{0x3063, 0x12},
++	{0x3068, 0x00},
++	{0x3069, 0x12},
++	{0x306A, 0x00},
++	{0x306B, 0x30},
++	{0x3076, 0x00},
++	{0x3077, 0x30},
++	{0x3078, 0x00},
++	{0x3079, 0x30},
++	{0x5E54, 0x0C},
++	{0x6E44, 0x00},
++	{0xB0B6, 0x01},
++	{0xE829, 0x00},
++	{0xF001, 0x08},
++	{0xF003, 0x08},
++	{0xF00D, 0x10},
++	{0xF00F, 0x10},
++	{0xF031, 0x08},
++	{0xF033, 0x08},
++	{0xF03D, 0x10},
++	{0xF03F, 0x10},
++	{0x0112, 0x0A},
++	{0x0113, 0x0A},
++	{0x0114, 0x01},
++	{0x0B8E, 0x01},
++	{0x0B8F, 0x00},
++	{0x0B94, 0x01},
++	{0x0B95, 0x00},
++	{0x3400, 0x01},
++	{0x3478, 0x01},
++	{0x3479, 0x1c},
++	{0x3091, 0x01},
++	{0x3092, 0x00},
++	{0x3419, 0x00},
++	{0xBCF1, 0x02},
++	{0x3094, 0x01},
++	{0x3095, 0x01},
++	{0x3362, 0x00},
++	{0x3363, 0x00},
++	{0x3364, 0x00},
++	{0x3365, 0x00},
++	{0x0138, 0x01},
++	{IMX708_TABLE_END, 0x0000}
++
++};
++
++static const imx708_reg imx708_mode_4608x2592_14fps[] = {
++	{0x0342, 0x3D},
++	{0x0343, 0x20},
++	{0x0340, 0x0A},
++	{0x0341, 0x59},
++	{0x0344, 0x00},
++	{0x0345, 0x00},
++	{0x0346, 0x00},
++	{0x0347, 0x00},
++	{0x0348, 0x11},
++	{0x0349, 0xFF},
++	{0x034A, 0X0A},
++	{0x034B, 0x1F},
++	{0x0220, 0x62},
++	{0x0222, 0x01},
++	{0x0900, 0x00},
++	{0x0901, 0x11},
++	{0x0902, 0x0A},
++	{0x3200, 0x01},
++	{0x3201, 0x01},
++	{0x32D5, 0x01},
++	{0x32D6, 0x00},
++	{0x32DB, 0x01},
++	{0x32DF, 0x00},
++	{0x350C, 0x00},
++	{0x350D, 0x00},
++	{0x0408, 0x00},
++	{0x0409, 0x00},
++	{0x040A, 0x00},
++	{0x040B, 0x00},
++	{0x040C, 0x12},
++	{0x040D, 0x00},
++	{0x040E, 0x0A},
++	{0x040F, 0x20},
++	{0x034C, 0x12},
++	{0x034D, 0x00},
++	{0x034E, 0x0A},
++	{0x034F, 0x20},
++	{0x0301, 0x05},
++	{0x0303, 0x02},
++	{0x0305, 0x02},
++	{0x0306, 0x00},
++	{0x0307, 0x7C},
++	{0x030B, 0x02},
++	{0x030D, 0x04},
++	{0x030E, 0x01},
++	{0x030F, 0x2C},
++	{0x0310, 0x01},
++	{0x3CA0, 0x00},
++	{0x3CA1, 0x64},
++	{0x3CA4, 0x00},
++	{0x3CA5, 0x00},
++	{0x3CA6, 0x00},
++	{0x3CA7, 0x00},
++	{0x3CAA, 0x00},
++	{0x3CAB, 0x00},
++	{0x3CB8, 0x00},
++	{0x3CB9, 0x08},
++	{0x3CBA, 0x00},
++	{0x3CBB, 0x00},
++	{0x3CBC, 0x00},
++	{0x3CBD, 0x3C},
++	{0x3CBE, 0x00},
++	{0x3CBF, 0x00},
++	{0x0202, 0x0A},
++	{0x0203, 0x29},
++	{0x0224, 0x01},
++	{0x0225, 0xF4},
++	{0x3116, 0x01},
++	{0x3117, 0xF4},
++	{0x0204, 0x00},
++	{0x0205, 0x00},
++	{0x0216, 0x00},
++	{0x0217, 0x00},
++	{0x0218, 0x01},
++	{0x0219, 0x00},
++	{0x020E, 0x01},
++	{0x020F, 0x00},
++	{0x3118, 0x00},
++	{0x3119, 0x00},
++	{0x311A, 0x01},
++	{0x311B, 0x00},
++	{0x341a, 0x00},
++	{0x341b, 0x00},
++	{0x341c, 0x00},
++	{0x341d, 0x00},
++	{0x341e, 0x01},
++	{0x341f, 0x20},
++	{0x3420, 0x00},
++	{0x3421, 0xd8},
++	{0xC428, 0x00},
++	{0xC429, 0x04},
++	{0x3366, 0x00},
++	{0x3367, 0x00},
++	{0x3368, 0x00},
++	{0x3369, 0x00},
++	{IMX708_TABLE_END, 0x0000}
++};
++
++static const imx708_reg imx708_mode_2304x1296_30fps[] = {
++	{0x0342, 0x1E},
++	{0x0343, 0x90},
++	{0x0340, 0x09},
++	{0x0341, 0xBE},
++	{0x0344, 0x00},
++	{0x0345, 0x00},
++	{0x0346, 0x00},
++	{0x0347, 0x00},
++	{0x0348, 0x11},
++	{0x0349, 0xFF},
++	{0x034A, 0X0A},
++	{0x034B, 0x1F},
++	{0x0220, 0x62},
++	{0x0222, 0x01},
++	{0x0900, 0x01},
++	{0x0901, 0x22},
++	{0x0902, 0x08},
++	{0x3200, 0x41},
++	{0x3201, 0x41},
++	{0x32D5, 0x00},
++	{0x32D6, 0x00},
++	{0x32DB, 0x01},
++	{0x32DF, 0x00},
++	{0x350C, 0x00},
++	{0x350D, 0x00},
++	{0x0408, 0x00},
++	{0x0409, 0x00},
++	{0x040A, 0x00},
++	{0x040B, 0x00},
++	{0x040C, 0x09},
++	{0x040D, 0x00},
++	{0x040E, 0x05},
++	{0x040F, 0x10},
++	{0x034C, 0x09},
++	{0x034D, 0x00},
++	{0x034E, 0x05},
++	{0x034F, 0x10},
++	{0x0301, 0x05},
++	{0x0303, 0x02},
++	{0x0305, 0x02},
++	{0x0306, 0x00},
++	{0x0307, 0x7A},
++	{0x030B, 0x02},
++	{0x030D, 0x04},
++	{0x030E, 0x01},
++	{0x030F, 0x2C},
++	{0x0310, 0x01},
++	{0x3CA0, 0x00},
++	{0x3CA1, 0x3C},
++	{0x3CA4, 0x00},
++	{0x3CA5, 0x3C},
++	{0x3CA6, 0x00},
++	{0x3CA7, 0x00},
++	{0x3CAA, 0x00},
++	{0x3CAB, 0x00},
++	{0x3CB8, 0x00},
++	{0x3CB9, 0x1C},
++	{0x3CBA, 0x00},
++	{0x3CBB, 0x08},
++	{0x3CBC, 0x00},
++	{0x3CBD, 0x1E},
++	{0x3CBE, 0x00},
++	{0x3CBF, 0x0A},
++	{0x0202, 0x05},
++	{0x0203, 0x08},
++	{0x0224, 0x01},
++	{0x0225, 0xF4},
++	{0x3116, 0x01},
++	{0x3117, 0xF4},
++	{0x0204, 0x00},
++	{0x0205, 0x70},
++	{0x0216, 0x00},
++	{0x0217, 0x70},
++	{0x0218, 0x01},
++	{0x0219, 0x00},
++	{0x020E, 0x01},
++	{0x020F, 0x00},
++	{0x3118, 0x00},
++	{0x3119, 0x70},
++	{0x311A, 0x01},
++	{0x311B, 0x00},
++	{0x341a, 0x00},
++	{0x341b, 0x00},
++	{0x341c, 0x00},
++	{0x341d, 0x00},
++	{0x341e, 0x00},
++	{0x341f, 0x90},
++	{0x3420, 0x00},
++	{0x3421, 0x6c},
++	{0x3366, 0x00},
++	{0x3367, 0x00},
++	{0x3368, 0x00},
++	{0x3369, 0x00},
++	{IMX708_TABLE_END, 0x0000}
++};
++
++static const imx708_reg imx708_mode_1536x864_120fps[] = {
++	/* HSYNC 5216 */
++	{0x0342, 0x14},
++	{0x0343, 0x60},
++	/* VSYNC 904 */
++	{0x0340, 0x03},
++	{0x0341, 0x88},
++	/* active area left */
++	{0x0344, 0x03},
++	{0x0345, 0x00},
++	/* active area top */
++	{0x0346, 0x01},
++	{0x0347, 0xB0},
++	/* active area right */
++	{0x0348, 0x0E},
++	{0x0349, 0xFF},
++	/* active area bottom */
++	{0x034A, 0x08},
++	{0x034B, 0x6F},
++	/* Maybe HDR Expoture Ratio */
++	{0x0220, 0x62},
++	{0x0222, 0x01},
++	/* binning */
++	{0x0900, 0x01},
++	{0x0901, 0x22},
++	{0x0902, 0x08},
++	{0x3200, 0x41},
++	{0x3201, 0x41},
++	{0x32D5, 0x00},
++	{0x32D6, 0x00},
++	{0x32DB, 0x01},
++	{0x32DF, 0x01},
++	/* fixed */
++	{0x350C, 0x00},
++	{0x350D, 0x00},
++	{0x0408, 0x00},
++	{0x0409, 0x00},
++	{0x040A, 0x00},
++	{0x040B, 0x00},
++	/* width 1536 */
++	{0x040C, 0x06},
++	{0x040D, 0x00},
++	/* height 864 */
++	{0x040E, 0x03},
++	{0x040F, 0x60},
++	/* width 1536 */
++	{0x034C, 0x06},
++	{0x034D, 0x00},
++	/* height 864 */
++	{0x034E, 0x03},
++	{0x034F, 0x60},
++	{0x0301, 0x05},
++	{0x0303, 0x02},
++	{0x0305, 0x02},
++	{0x0306, 0x00},
++	{0x0307, 0x76},
++	{0x030B, 0x02},
++	{0x030D, 0x04},
++	{0x030E, 0x01},
++	{0x030F, 0x2C},
++	{0x0310, 0x01},
++	{0x3CA0, 0x00},
++	{0x3CA1, 0x3C},
++	{0x3CA4, 0x01},
++	{0x3CA5, 0x5E},
++	{0x3CA6, 0x00},
++	{0x3CA7, 0x00},
++	{0x3CAA, 0x00},
++	{0x3CAB, 0x00},
++	{0x3CB8, 0x00},
++	{0x3CB9, 0x0C},
++	{0x3CBA, 0x00},
++	{0x3CBB, 0x04},
++	{0x3CBC, 0x00},
++	{0x3CBD, 0x1E},
++	{0x3CBE, 0x00},
++	{0x3CBF, 0x05},
++	/* exposure */
++	{0x0202, 0x04},
++	{0x0203, 0x86},
++	{0x0224, 0x01},
++	{0x0225, 0xF4},
++	{0x3116, 0x01},
++	{0x3117, 0xF4},
++	{0x0204, 0x00},
++	{0x0205, 0x70},
++	{0x0216, 0x00},
++	{0x0217, 0x70},
++	{0x0218, 0x01},
++	{0x0219, 0x00},
++	{0x020E, 0x01},
++	{0x020F, 0x00},
++	{0x3118, 0x00},
++	{0x3119, 0x70},
++	{0x311A, 0x01},
++	{0x311B, 0x00},
++	{0x341a, 0x00},
++	{0x341b, 0x00},
++	{0x341c, 0x00},
++	{0x341d, 0x00},
++	{0x341e, 0x00},
++	{0x341f, 0x60},
++	{0x3420, 0x00},
++	{0x3421, 0x48},
++	{0x3366, 0x00},
++	{0x3367, 0x00},
++	{0x3368, 0x00},
++	{0x3369, 0x00},
++	{IMX708_TABLE_END, 0x0000}
++};
++
++enum {
++	IMX708_MODE_4608x2592_14FPS,
++	IMX708_MODE_2304x1296_30FPS,
++	IMX708_MODE_1536x864_120FPS,
++
++	IMX708_MODE_COMMON,
++	IMX708_START_STREAM,
++	IMX708_STOP_STREAM,
++};
++
++static const imx708_reg *mode_table[] = {
++	[IMX708_MODE_4608x2592_14FPS] = imx708_mode_4608x2592_14fps,
++	[IMX708_MODE_2304x1296_30FPS] = imx708_mode_2304x1296_30fps,
++	[IMX708_MODE_1536x864_120FPS] = imx708_mode_1536x864_120fps,
++
++	[IMX708_MODE_COMMON] = imx708_mode_common,
++	[IMX708_START_STREAM] = imx708_start,
++	[IMX708_STOP_STREAM] = imx708_stop,
++};
++
++static const int imx708_14_fr[] = {
++	14,
++};
++
++static const int imx708_30_fr[] = {
++	30,
++};
++static const int imx708_120_fr[] = {
++	120,
++};
++
++static const struct camera_common_frmfmt imx708_frmfmt[] = {
++	{{4608, 2592}, imx708_14_fr, 1, 0, IMX708_MODE_4608x2592_14FPS},
++	{{2304, 1296}, imx708_30_fr, 1, 0, IMX708_MODE_2304x1296_30FPS},
++	{{1536, 864}, imx708_120_fr, 1, 0, IMX708_MODE_1536x864_120FPS},
++};
++#endif /* __IMX708_I2C_TABLES__ */
+diff --git a/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/nv_imx708.c b/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/nv_imx708.c
+new file mode 100644
+index 000000000..a9c6f6bb6
+--- /dev/null
++++ b/Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c/nv_imx708.c
+@@ -0,0 +1,676 @@
++/*
++ * imx708.c - imx708 sensor driver
++ *
++ * Copyright (c) 2020, RidgeRun. All rights reserved.
++ * Copyright (c) 2021-2023, NVIDIA CORPORATION.  All rights reserved.
++ * Copyright (c) 2022, Raspberry Pi Ltd
++ * Copyright (c) 2023, FUJINAKA Fumiya<uzuna.kf@gmail.com>.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#define DEBUG 1
++
++#include <linux/slab.h>
++#include <linux/uaccess.h>
++#include <linux/gpio.h>
++#include <linux/module.h>
++#include <linux/seq_file.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/of_gpio.h>
++
++#include <media/tegra_v4l2_camera.h>
++#include <media/tegracam_core.h>
++
++#include "../platform/tegra/camera/camera_gpio.h"
++#include "imx708_mode_tbls.h"
++
++#define IMX708_SENSOR_INTERNAL_CLK_FREQ   840000000
++#define IMX708_REG_CHIP_ID		0x0016
++#define IMX708_CHIP_ID			0x0708
++
++static const struct of_device_id imx708_of_match[] = {
++	{.compatible = "sony,imx708",},
++	{},
++};
++
++MODULE_DEVICE_TABLE(of, imx708_of_match);
++
++static const u32 ctrl_cid_list[] = {
++	TEGRA_CAMERA_CID_GAIN,
++	TEGRA_CAMERA_CID_EXPOSURE,
++	TEGRA_CAMERA_CID_FRAME_RATE,
++	TEGRA_CAMERA_CID_SENSOR_MODE_ID,
++};
++
++enum imx708_Config {
++	TWO_LANE_CONFIG,
++	FOUR_LANE_CONFIG,
++};
++
++struct imx708 {
++	struct i2c_client *i2c_client;
++	struct v4l2_subdev *subdev;
++	u16 fine_integ_time;
++	u32 frame_length;
++	struct camera_common_data *s_data;
++	struct tegracam_device *tc_dev;
++	enum imx708_Config config;
++};
++
++static const struct regmap_config sensor_regmap_config = {
++	.reg_bits = 16,
++	.val_bits = 8,
++	.cache_type = REGCACHE_RBTREE,
++#if KERNEL_VERSION(5, 4, 0) > LINUX_VERSION_CODE
++		.use_single_rw = true,
++#else
++		.use_single_read = true,
++		.use_single_write = true,
++#endif
++};
++
++static inline int imx708_read_reg(struct camera_common_data *s_data,
++				  u16 addr, u8 * val)
++{
++	int err = 0;
++	u32 reg_val = 0;
++
++	err = regmap_read(s_data->regmap, addr, &reg_val);
++	*val = reg_val & 0xff;
++
++	return err;
++}
++
++static inline int imx708_write_reg(struct camera_common_data *s_data,
++				   u16 addr, u8 val)
++{
++	int err = 0;
++
++	err = regmap_write(s_data->regmap, addr, val);
++	if (err)
++		dev_err(s_data->dev, "%s: i2c write failed, 0x%x = %x",
++			__func__, addr, val);
++
++	return err;
++}
++
++static int imx708_write_table(struct imx708 *priv, const imx708_reg table[])
++{
++	return regmap_util_write_table_8(priv->s_data->regmap, table, NULL, 0,
++					 IMX708_TABLE_WAIT_MS,
++					 IMX708_TABLE_END);
++}
++
++// 値が8bit以上で連続するレジスタに書き込む時に使う
++static void imx708_regtable(imx708_reg table[], u16 address_low, u8 nr_regs,
++	u32 value)
++{
++	unsigned int i;
++
++	for (i = 0; i < nr_regs; i++) {
++		(table+i)->addr = address_low + i;
++		(table+i)->val = (u8)(value >> ((nr_regs - 1 - i) * 8));
++	}
++}
++
++static int imx708_set_group_hold(struct tegracam_device *tc_dev, bool val)
++{
++	return 0;
++}
++
++static int imx708_set_gain(struct tegracam_device *tc_dev, s64 val)
++{
++	struct camera_common_data *s_data = tc_dev->s_data;
++	struct imx708 *priv = (struct imx708 *)tc_dev->priv;
++	struct device *dev = s_data->dev;
++	const struct sensor_mode_properties *mode =
++		&s_data->sensor_props.sensor_modes[s_data->mode_prop_idx];
++
++	imx708_reg regs[3];
++
++	if (val < mode->control_properties.min_gain_val)
++		val = mode->control_properties.min_gain_val;
++	else if (val > mode->control_properties.max_gain_val)
++		val = mode->control_properties.max_gain_val;
++	
++	// アナログゲインは2レジスタに分かれている
++	// 単位が不明なので、値の変換をせずそのまま書き込む
++	imx708_regtable(regs, IMX708_REG_ANALOG_GAIN, 2, val);
++	dev_dbg(dev, "%s: val: %lld\n", __func__, val);
++	(regs+2)->addr = IMX708_TABLE_END;
++
++	return imx708_write_table(priv, regs);
++}
++
++static int imx708_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
++{
++	return 0;
++}
++
++static int imx708_set_exposure(struct tegracam_device *tc_dev, s64 val)
++{
++	struct camera_common_data *s_data = tc_dev->s_data;
++	struct imx708 *priv = (struct imx708 *)tc_dev->priv;
++	struct device *dev = s_data->dev;
++	const struct sensor_mode_properties *mode =
++		&s_data->sensor_props.sensor_modes[s_data->mode_prop_idx];
++	
++	u32 exp = 0;
++	imx708_reg regs[3];
++
++	if (val < (s64)mode->control_properties.min_exp_time.val)
++		val = (s64)mode->control_properties.min_exp_time.val;
++	else if (val > (s64)mode->control_properties.max_exp_time.val)
++		val = (s64)mode->control_properties.max_exp_time.val;
++	
++	// 露光時間はline数となっているが、デバイスツリーでは時間で表記している
++	// 時間をline数に変換する
++	exp = (u32)(val / (s64)mode->control_properties.step_exp_time.val);
++	dev_dbg(dev, "%s: exp_time: %lld [%u]\n", __func__, val, exp);
++	imx708_regtable(regs, IMX708_REG_EXPOSURE, 2, exp);
++	(regs+2)->addr = IMX708_TABLE_END;
++	return imx708_write_table(priv, regs);
++}
++
++static struct tegracam_ctrl_ops imx708_ctrl_ops = {
++	.numctrls = ARRAY_SIZE(ctrl_cid_list),
++	.ctrl_cid_list = ctrl_cid_list,
++	.set_gain = imx708_set_gain,
++	.set_exposure = imx708_set_exposure,
++	.set_frame_rate = imx708_set_frame_rate,
++	.set_group_hold = imx708_set_group_hold,
++};
++
++static int imx708_power_on(struct camera_common_data *s_data)
++{
++	int err = 0;
++	struct camera_common_power_rail *pw = s_data->power;
++	struct camera_common_pdata *pdata = s_data->pdata;
++	struct device *dev = s_data->dev;
++
++	dev_dbg(dev, "%s: power on\n", __func__);
++	if (pdata && pdata->power_on) {
++		err = pdata->power_on(pw);
++		if (err)
++			dev_err(dev, "%s failed.\n", __func__);
++		else
++			pw->state = SWITCH_ON;
++		return err;
++	}
++
++	if (pw->reset_gpio) {
++		if (gpio_cansleep(pw->reset_gpio))
++			gpio_set_value_cansleep(pw->reset_gpio, 0);
++		else
++			gpio_set_value(pw->reset_gpio, 0);
++	}
++
++	if (unlikely(!(pw->avdd || pw->iovdd || pw->dvdd)))
++		goto skip_power_seqn;
++
++	usleep_range(10, 20);
++
++	if (pw->avdd) {
++		err = regulator_enable(pw->avdd);
++		if (err)
++			goto imx708_avdd_fail;
++	}
++
++	if (pw->iovdd) {
++		err = regulator_enable(pw->iovdd);
++		if (err)
++			goto imx708_iovdd_fail;
++	}
++
++	if (pw->dvdd) {
++		err = regulator_enable(pw->dvdd);
++		if (err)
++			goto imx708_dvdd_fail;
++	}
++
++	usleep_range(10, 20);
++
++skip_power_seqn:
++	if (pw->reset_gpio) {
++		if (gpio_cansleep(pw->reset_gpio))
++			gpio_set_value_cansleep(pw->reset_gpio, 1);
++		else
++			gpio_set_value(pw->reset_gpio, 1);
++	}
++
++	usleep_range(8000, 9000);
++
++	pw->state = SWITCH_ON;
++
++	return 0;
++
++imx708_dvdd_fail:
++	regulator_disable(pw->iovdd);
++
++imx708_iovdd_fail:
++	regulator_disable(pw->avdd);
++
++imx708_avdd_fail:
++	dev_err(dev, "%s failed.\n", __func__);
++
++	return -ENODEV;
++}
++
++static int imx708_power_off(struct camera_common_data *s_data)
++{
++	int err = 0;
++	struct camera_common_power_rail *pw = s_data->power;
++	struct camera_common_pdata *pdata = s_data->pdata;
++	struct device *dev = s_data->dev;
++
++	dev_dbg(dev, "%s: power off\n", __func__);
++
++	if (pdata && pdata->power_off) {
++		err = pdata->power_off(pw);
++		if (err) {
++			dev_err(dev, "%s failed.\n", __func__);
++			return err;
++		}
++	} else {
++		if (pw->reset_gpio) {
++			if (gpio_cansleep(pw->reset_gpio))
++				gpio_set_value_cansleep(pw->reset_gpio, 0);
++			else
++				gpio_set_value(pw->reset_gpio, 0);
++		}
++
++		usleep_range(10, 10);
++
++		if (pw->dvdd)
++			regulator_disable(pw->dvdd);
++		if (pw->iovdd)
++			regulator_disable(pw->iovdd);
++		if (pw->avdd)
++			regulator_disable(pw->avdd);
++	}
++
++	pw->state = SWITCH_OFF;
++
++	return 0;
++}
++
++static int imx708_power_put(struct tegracam_device *tc_dev)
++{
++	struct device *dev = tc_dev->dev;
++	struct camera_common_data *s_data = tc_dev->s_data;
++	struct camera_common_power_rail *pw = s_data->power;
++
++	if (unlikely(!pw))
++		return -EFAULT;
++
++	if (likely(pw->dvdd))
++		devm_regulator_put(pw->dvdd);
++
++	if (likely(pw->avdd))
++		devm_regulator_put(pw->avdd);
++
++	if (likely(pw->iovdd))
++		devm_regulator_put(pw->iovdd);
++
++	pw->dvdd = NULL;
++	pw->avdd = NULL;
++	pw->iovdd = NULL;
++
++	if (likely(pw->reset_gpio)){
++		dev_dbg(dev, "free reset_gpio\n");
++		gpio_free(pw->reset_gpio);
++	}
++
++	return 0;
++}
++
++static int imx708_power_get(struct tegracam_device *tc_dev)
++{
++	struct device *dev = tc_dev->dev;
++	struct camera_common_data *s_data = tc_dev->s_data;
++	struct camera_common_power_rail *pw = s_data->power;
++	struct camera_common_pdata *pdata = s_data->pdata;
++	struct clk *parent;
++	int err = 0;
++
++	if (!pdata) {
++		dev_err(dev, "pdata missing\n");
++		return -EFAULT;
++	}
++
++	/* Sensor MCLK (aka. INCK) */
++	if (pdata->mclk_name) {
++		pw->mclk = devm_clk_get(dev, pdata->mclk_name);
++		if (IS_ERR(pw->mclk)) {
++			dev_err(dev, "unable to get clock %s\n",
++				pdata->mclk_name);
++			return PTR_ERR(pw->mclk);
++		}
++
++		if (pdata->parentclk_name) {
++			parent = devm_clk_get(dev, pdata->parentclk_name);
++			if (IS_ERR(parent)) {
++				dev_err(dev, "unable to get parent clock %s",
++					pdata->parentclk_name);
++			} else
++				clk_set_parent(pw->mclk, parent);
++		}
++	}
++
++	/* analog 2.8v */
++	if (pdata->regulators.avdd)
++		err |= camera_common_regulator_get(dev,
++						   &pw->avdd,
++						   pdata->regulators.avdd);
++	/* IO 1.8v */
++	if (pdata->regulators.iovdd)
++		err |= camera_common_regulator_get(dev,
++						   &pw->iovdd,
++						   pdata->regulators.iovdd);
++	/* dig 1.2v */
++	if (pdata->regulators.dvdd)
++		err |= camera_common_regulator_get(dev,
++						   &pw->dvdd,
++						   pdata->regulators.dvdd);
++	if (err) {
++		dev_err(dev, "%s: unable to get regulator(s)\n", __func__);
++		goto done;
++	}
++
++	/* Reset or ENABLE GPIO */
++	pw->reset_gpio = pdata->reset_gpio;
++	err = gpio_request(pw->reset_gpio, "cam_reset_gpio");
++	if (err < 0) {
++		dev_err(dev, "%s: unable to request reset_gpio (%d)\n",
++			__func__, err);
++		goto done;
++	}
++
++done:
++	pw->state = SWITCH_OFF;
++
++	return err;
++}
++
++static struct camera_common_pdata *imx708_parse_dt(struct tegracam_device
++						   *tc_dev)
++{
++	struct device *dev = tc_dev->dev;
++	struct device_node *np = dev->of_node;
++	struct camera_common_pdata *board_priv_pdata;
++	const struct of_device_id *match;
++	struct camera_common_pdata *ret = NULL;
++	int err = 0;
++	int gpio;
++
++	if (!np)
++		return NULL;
++
++	match = of_match_device(imx708_of_match, dev);
++	if (!match) {
++		dev_err(dev, "Failed to find matching dt id\n");
++		return NULL;
++	}
++
++	board_priv_pdata = devm_kzalloc(dev,
++					sizeof(*board_priv_pdata), GFP_KERNEL);
++	if (!board_priv_pdata)
++		return NULL;
++
++	gpio = of_get_named_gpio(np, "reset-gpios", 0);
++	if (gpio < 0) {
++		if (gpio == -EPROBE_DEFER)
++			ret = ERR_PTR(-EPROBE_DEFER);
++		dev_err(dev, "reset-gpios not found\n");
++		goto error;
++	}
++	board_priv_pdata->reset_gpio = (unsigned int)gpio;
++
++	err = of_property_read_string(np, "mclk", &board_priv_pdata->mclk_name);
++	if (err)
++		dev_dbg(dev, "mclk name not present, "
++			"assume sensor driven externally\n");
++
++	err = of_property_read_string(np, "avdd-reg",
++				      &board_priv_pdata->regulators.avdd);
++	err |= of_property_read_string(np, "iovdd-reg",
++				       &board_priv_pdata->regulators.iovdd);
++	err |= of_property_read_string(np, "dvdd-reg",
++				       &board_priv_pdata->regulators.dvdd);
++	if (err)
++		dev_dbg(dev, "avdd, iovdd and/or dvdd reglrs. not present, "
++			"assume sensor powered independently\n");
++
++	board_priv_pdata->has_eeprom = of_property_read_bool(np, "has-eeprom");
++
++	return board_priv_pdata;
++
++error:
++	devm_kfree(dev, board_priv_pdata);
++
++	return ret;
++}
++
++static int imx708_set_mode(struct tegracam_device *tc_dev)
++{
++	struct imx708 *priv = (struct imx708 *)tegracam_get_privdata(tc_dev);
++	struct camera_common_data *s_data = tc_dev->s_data;
++
++	int err = 0;
++	const char *config;
++	struct device_node *mode;
++	uint offset = ARRAY_SIZE(imx708_frmfmt);
++
++	dev_dbg(tc_dev->dev, "%s:\n", __func__);
++	mode = of_get_child_by_name(tc_dev->dev->of_node, "mode0");
++	err = of_property_read_string(mode, "num_lanes", &config);
++
++	if (config[0] == '4')
++		priv->config = FOUR_LANE_CONFIG;
++	else if (config[0] == '2')
++		priv->config = TWO_LANE_CONFIG;
++	else
++		dev_err(tc_dev->dev, "Unsupported config\n");
++
++	err = imx708_write_table(priv, mode_table[IMX708_MODE_COMMON]);
++	if (err)
++		return err;
++
++	if (priv->config == FOUR_LANE_CONFIG)
++		err = imx708_write_table(priv, mode_table[s_data->mode + offset]);
++	else
++		err = imx708_write_table(priv, mode_table[s_data->mode]);
++	if (err)
++		return err;
++
++	return 0;
++}
++
++static int imx708_start_streaming(struct tegracam_device *tc_dev)
++{
++	struct imx708 *priv = (struct imx708 *)tegracam_get_privdata(tc_dev);
++
++	dev_dbg(tc_dev->dev, "%s:\n", __func__);
++	return imx708_write_table(priv, mode_table[IMX708_START_STREAM]);
++}
++
++static int imx708_stop_streaming(struct tegracam_device *tc_dev)
++{
++	int err;
++	struct imx708 *priv = (struct imx708 *)tegracam_get_privdata(tc_dev);
++
++	dev_dbg(tc_dev->dev, "%s:\n", __func__);
++	err = imx708_write_table(priv, mode_table[IMX708_STOP_STREAM]);
++
++	return err;
++}
++
++static struct camera_common_sensor_ops imx708_common_ops = {
++	.numfrmfmts = ARRAY_SIZE(imx708_frmfmt),
++	.frmfmt_table = imx708_frmfmt,
++	.power_on = imx708_power_on,
++	.power_off = imx708_power_off,
++	.write_reg = imx708_write_reg,
++	.read_reg = imx708_read_reg,
++	.parse_dt = imx708_parse_dt,
++	.power_get = imx708_power_get,
++	.power_put = imx708_power_put,
++	.set_mode = imx708_set_mode,
++	.start_streaming = imx708_start_streaming,
++	.stop_streaming = imx708_stop_streaming,
++};
++
++static int imx708_board_setup(struct imx708 *priv)
++{
++	struct camera_common_data *s_data = priv->s_data;
++	struct device *dev = s_data->dev;
++	u8 reg_val[2];
++	int err = 0;
++
++	// Skip mclk enable as this camera has an internal oscillator
++
++	err = imx708_power_on(s_data);
++	if (err) {
++		dev_err(dev, "error during power on sensor (%d)\n", err);
++		goto done;
++	}
++
++	/* Probe sensor model id registers */
++	err = imx708_read_reg(s_data, IMX708_REG_CHIP_ID, &reg_val[0]);
++	if (err) {
++		dev_err(dev, "%s: error during i2c read probe (%d)\n",
++			__func__, err);
++		goto err_reg_probe;
++	}
++	err = imx708_read_reg(s_data, IMX708_REG_CHIP_ID+1, &reg_val[1]);
++	if (err) {
++		dev_err(dev, "%s: error during i2c read probe (%d)\n",
++			__func__, err);
++		goto err_reg_probe;
++	}
++
++	if (!((reg_val[0] == 0x07) && reg_val[1] == 0x08))
++		dev_err(dev, "%s: invalid sensor model id: %x%x\n",
++			__func__, reg_val[0], reg_val[1]);
++
++err_reg_probe:
++	imx708_power_off(s_data);
++
++done:
++	return err;
++}
++
++static int imx708_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++
++	dev_dbg(&client->dev, "%s:\n", __func__);
++
++	return 0;
++}
++
++static const struct v4l2_subdev_internal_ops imx708_subdev_internal_ops = {
++	.open = imx708_open,
++};
++
++static int imx708_probe(struct i2c_client *client,
++			const struct i2c_device_id *id)
++{
++	struct device *dev = &client->dev;
++	struct tegracam_device *tc_dev;
++	struct imx708 *priv;
++	int err;
++
++	dev_dbg(dev, "probing v4l2 sensor at addr 0x%0x\n", client->addr);
++
++	if (!IS_ENABLED(CONFIG_OF) || !client->dev.of_node)
++		return -EINVAL;
++
++	priv = devm_kzalloc(dev, sizeof(struct imx708), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	tc_dev = devm_kzalloc(dev, sizeof(struct tegracam_device), GFP_KERNEL);
++	if (!tc_dev)
++		return -ENOMEM;
++
++	priv->i2c_client = tc_dev->client = client;
++	tc_dev->dev = dev;
++	strncpy(tc_dev->name, "imx708", sizeof(tc_dev->name));
++	tc_dev->dev_regmap_config = &sensor_regmap_config;
++	tc_dev->sensor_ops = &imx708_common_ops;
++	tc_dev->v4l2sd_internal_ops = &imx708_subdev_internal_ops;
++	tc_dev->tcctrl_ops = &imx708_ctrl_ops;
++
++	err = tegracam_device_register(tc_dev);
++	if (err) {
++		dev_err(dev, "tegra camera driver registration failed\n");
++		return err;
++	}
++	priv->tc_dev = tc_dev;
++	priv->s_data = tc_dev->s_data;
++	priv->subdev = &tc_dev->s_data->subdev;
++	tegracam_set_privdata(tc_dev, (void *)priv);
++
++	err = imx708_board_setup(priv);
++	if (err) {
++		dev_err(dev, "board setup failed\n");
++		return err;
++	}
++
++	err = tegracam_v4l2subdev_register(tc_dev, true);
++	if (err) {
++		dev_err(dev, "tegra camera subdev registration failed\n");
++		return err;
++	}
++
++	dev_dbg(dev, "detected imx708 sensor\n");
++
++	return 0;
++}
++
++static int imx708_remove(struct i2c_client *client)
++{
++	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
++	struct imx708 *priv = (struct imx708 *)s_data->priv;
++
++	tegracam_v4l2subdev_unregister(priv->tc_dev);
++	tegracam_device_unregister(priv->tc_dev);
++
++	return 0;
++}
++
++static const struct i2c_device_id imx708_id[] = {
++	{"imx708", 0},
++	{}
++};
++
++MODULE_DEVICE_TABLE(i2c, imx708_id);
++
++static struct i2c_driver imx708_i2c_driver = {
++	.driver = {
++		   .name = "imx708",
++		   .owner = THIS_MODULE,
++		   .of_match_table = of_match_ptr(imx708_of_match),
++		   },
++	.probe = imx708_probe,
++	.remove = imx708_remove,
++	.id_table = imx708_id,
++};
++
++module_i2c_driver(imx708_i2c_driver);
++
++MODULE_DESCRIPTION("Media Controller driver for Sony IMX708");
++MODULE_AUTHOR("FUJINAKA Fumiya<uzuna.kf@gmail.com>");
++MODULE_LICENSE("GPL v2");
