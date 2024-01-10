@@ -9,6 +9,7 @@
 ## How to build
 
 ```sh
+make setup
 make build_kernel
 make apply_patch
 make build_dtb
@@ -32,3 +33,39 @@ make build_modules
    6. rebootを待つ
 3. `make insmod`で`nv_imx708.ko`をロードする
 4. `make check.0`で映像を取得する
+
+
+## How to flash
+
+以下でflashできます。
+
+
+```sh
+export HOSTNAME=<your jetson hostname>
+
+make -C bsp-flash pre-flash
+# Connect Jetson orin nano with RecoveryMode
+make -C bsp-flash flash
+```
+
+### boot-up and ssh expose待ちで先に進められない場合
+
+```console
+***************************************
+*                                     *
+*  Step 3: Start the flashing process *
+*                                     *
+***************************************
+Waiting for target to boot-up...
+Waiting for target to boot-up...
+```
+
+HostのdmesgにUSBの接続エラーが出ている場合は、電源を切らずにUSBケーブルを再接続してください。  
+JetsonのUSBデバイスモードの設定が不十分な状態で接続を拒否しているのが接続できない理由なので、再接続をして正しく認識させます。
+
+```console
+$ sudo dmesg
+...
+usb usb4-port2: Cannot enable. Maybe the USB cable is bad?
+...
+```

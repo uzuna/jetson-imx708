@@ -1,0 +1,24 @@
+Index: bsp-flash/Linux_for_Tegra/tools/kernel_flash/initrd_flash/nv_enable_remote.sh
+===================================================================
+--- bsp-flash.orig/Linux_for_Tegra/tools/kernel_flash/initrd_flash/nv_enable_remote.sh
++++ bsp-flash/Linux_for_Tegra/tools/kernel_flash/initrd_flash/nv_enable_remote.sh
+@@ -84,9 +84,9 @@ function set_up_usb_device_mode()
+ 
+ 	# find UDC device for usb device mode
+ 	for _ in $(seq 60); do
+-		udc_dev=3550000.usb
+-		if [ ! -e "/sys/class/udc/${udc_dev}" ]; then
+-			udc_dev=""
++		udc_dev_t186=3550000.usb
++		if [ -e "/sys/class/udc/${udc_dev_t186}" ]; then
++			udc_dev="${udc_dev_t186}"
+ 			break
+ 		fi
+ 		sleep 1
+@@ -257,5 +257,6 @@ enable_remote_access()
+ 	mount "${pts_dir}"
+ 	mkdir -p /run/sshd
+ 	/bin/sshd -E /tmp/sshd.log
++	echo "Prease reconnect USB Cable if do not connect ssh"
+ 	return 0
+ )

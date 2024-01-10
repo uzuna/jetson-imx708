@@ -1,11 +1,7 @@
-MAJOR:=36
-MINOR:=2.0
+include l4t.mk
 
 # L4T Source
 L4T_SOURCE_TBZ:=public_sources.tbz2
-L4T_RELEASE_ADDR:=https://developer.download.nvidia.com/embedded/L4T/r${MAJOR}_Release_v${MINOR}
-SOURCE_ADDR:=${L4T_RELEASE_ADDR}/sources
-TOOL_CHAIN_ADDR:=${L4T_RELEASE_ADDR}/toolchain
 
 # L4T build target
 KERNEL_TBZ:=kernel_src.tbz2
@@ -109,5 +105,5 @@ CAMERA_MODULE_DIR=Linux_for_Tegra/source/nvidia-oot/drivers/media/i2c
 .PHONY: cp
 cp:
 	rsync -av ${DTBS_DIR}/${CAMERA_DTBO} ${JETSON_TARGET}:${WORKDIR}/
-	rsync -av ${CAMERA_MODULE_DIR}/${IMX708_KO	} ${JETSON_TARGET}:${WORKDIR}/
+	rsync -av ${CAMERA_MODULE_DIR}/${IMX708_KO} ${JETSON_TARGET}:${WORKDIR}/
 	rsync -av imx708/l4t-${MAJOR}.${MINOR}/scripts/* ${JETSON_TARGET}:${WORKDIR}/
