@@ -78,7 +78,7 @@ index 000000000..ad4bb11f7
 +						orientation = "1";
 +						drivernode0 {
 +							pcl_id = "v4l2_sensor";
-+							sysfs-device-tree = "/proc/device-tree/cam_i2cmux/i2c@0/rbpcv3_imx708_a@1a";
++							sysfs-device-tree = "/sys/firmware/devicetree/base/bus@0/cam_i2cmux/i2c@0/rbpcv3_imx708_a@1a";
 +						};
 +					};
 +					module1 {
@@ -87,7 +87,7 @@ index 000000000..ad4bb11f7
 +						orientation = "1";
 +						drivernode0 {
 +							pcl_id = "v4l2_sensor";
-+							sysfs-device-tree = "/proc/device-tree/cam_i2cmux/i2c@1/rbpcv3_imx708_c@1a";
++							sysfs-device-tree = "/sys/firmware/devicetree/base/bus@0/cam_i2cmux/i2c@1/rbpcv3_imx708_c@1a";
 +						};
 +					};
 +				};
