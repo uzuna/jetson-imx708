@@ -1,5 +1,5 @@
 BASE_DTB:=tegra234-p3767-0003-p3768-0000-a0.dtb
-CAMERA_DTB:=tegra234-p3767-camera-p3768-imx708.dtbo
+CAMERA_DTB:=tegra234-p3767-camera-p3768-imx708-dual.dtbo
 OUT_DTB=/boot/kernel_tegra234-p3767-0003-p3768-0000-a0-user-custom.dtb
 
 .PHONY: overlay
