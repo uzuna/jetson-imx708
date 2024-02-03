@@ -62,3 +62,8 @@ trace.disable:
 .PHONY: trace.log
 trace.log:
 	sudo cat /sys/kernel/debug/tracing/trace > log.txt
+
+.PHONY: manual_focus
+manual_focus: Jetson_IMX708_Focus_Example
+Jetson_IMX708_Focus_Example:
+	git clone https://github.com/ArduCAM/Jetson_IMX708_Focus_Example.git
