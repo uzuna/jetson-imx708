@@ -1,14 +1,24 @@
-MAJOR:=35
-MINOR:=3.1
-L4T_SOURCE_TBZ:=public_sources.tbz2
+include l4t.mk
+
+
+# L4T build target
 KERNEL_TBZ:=kernel_src.tbz2
-SOURCE_ADDR:=https://developer.download.nvidia.com/embedded/L4T/r${MAJOR}_Release_v${MINOR}/sources
+
+# L4T Source
+L4T_SOURCE_TBZ:=public_sources.tbz
 TOOLCHAIN_TAR:=aarch64--glibc--stable-final.tar.gz
 
-PWD:=$(shell pwd)
-L4T_SOURCE_DIR:=Linux_for_Tegra/source/public
+# l4t build toolchain
+TOOLCHAIN_DIRNAME:=aarch64--glibc--stable-2022.08-1
+TOOLCHAIN_TAR:=${TOOLCHAIN_DIRNAME}.tar.bz2
 TOOLCHAIN_DIR:=${PWD}/l4t-gcc
-KERNEL_DIR:=${PWD}/${L4T_SOURCE_DIR}/kernel/kernel-5.10
+
+PWD:=$(shell pwd)
+
+# relative path tar解凍にも使う
+L4T_SOURCE_DIR:=Linux_for_Tegra/source
+# absolute path
+KERNEL_DIR:=${PWD}/${L4T_SOURCE_DIR}/kernel/kernel-jammy-src
 KERNEL_OUT:=${PWD}/kernel_out
 
 export ARCH=arm64
@@ -19,7 +29,7 @@ export CROSS_COMPILE=${TOOLCHAIN_DIR}/bin/aarch64-buildroot-linux-gnu-
 build: extract toolchain
 	mkdir -p ${KERNEL_OUT}
 	make -C ${KERNEL_DIR} O=${KERNEL_OUT} tegra_defconfig
-	make -C ${KERNEL_DIR} O=${KERNEL_OUT} -j8 dtbs modules
+	make -C ${KERNEL_DIR} O=${KERNEL_OUT} dtbs modules
 
 # extract kernel source and toolchain
 extract: ${KERNEL_DIR}
